@@ -4,7 +4,7 @@ import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.api.pattern.BlockPattern;
 import com.gregtechceu.gtceu.api.block.MetaMachineBlock;
-import com.gregtechceu.gtceu.api.machine.IMetaMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.pattern.MultiblockShapeInfo;
 import com.gregtechceu.gtceu.api.pattern.TraceabilityPredicate;
@@ -72,14 +72,16 @@ public class PatternPreviewWidget extends WidgetGroup {
                 .setRenderFacing(false)
                 .setRenderFacing(false));
 
-        if (!RenderSystem.isOnRenderThread()) {
-            RenderSystem.recordRenderCall(sceneWidget::useCacheBuffer);
-        } else {
-            sceneWidget.useCacheBuffer();
+        if (!GTCEu.isIrisLoaded() && !LDLib.isEmiLoaded()) {
+            if (!RenderSystem.isOnRenderThread()) {
+                RenderSystem.recordRenderCall(sceneWidget::useCacheBuffer);
+            } else {
+                sceneWidget.useCacheBuffer();
+            }
         }
 
         addWidget(new ImageWidget(3, 3, 170, 10,
-                new TextTexture(controllerDefinition.get().getDescriptionId(), -1)
+                new TextTexture(controllerDefinition.getDescriptionId(), -1)
                         .setType(TextTexture.TextType.ROLL)
                         .setWidth(170)
                         .setDropShadow(true)));
@@ -248,7 +250,7 @@ public class PatternPreviewWidget extends WidgetGroup {
                 for (int z = 0; z < column.length; z++) {
                     BlockState blockState = column[z].getBlockState();
                     BlockPos pos = multiPos.offset(x, y, z);
-                    if (column[z].getBlockEntity(pos) instanceof IMetaMachineBlockEntity holder
+                    if (column[z].getBlockEntity(pos) instanceof IMachineBlockEntity holder
                             && holder.getMetaMachine() instanceof IMultiController controller) {
                         holder.getSelf().setLevel(LEVEL);
                         controllerBase = controller;
@@ -260,7 +262,7 @@ public class PatternPreviewWidget extends WidgetGroup {
 
         LEVEL.addBlocks(blockMap);
         if (controllerBase != null) {
-            LEVEL.setBlockEntity(controllerBase.self().holder.getSelf());
+            LEVEL.setInnerBlockEntity(controllerBase.self().holder.getSelf());
         }
 
         Map<ItemStackKey, PartInfo> parts = gatherBlockDrops(blockMap);

@@ -1,9 +1,9 @@
 package com.gregtechceu.gtceu.api.pattern;
 
+import com.gregtechceu.gtceu.api.block.ActiveBlock;
 import com.gregtechceu.gtceu.api.pattern.error.PatternError;
-import com.gregtechceu.gtceu.api.block.VariantActiveBlock;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
-import com.gregtechceu.gtceu.api.machine.IMetaMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.pattern.error.PatternStringError;
 import com.gregtechceu.gtceu.api.pattern.predicates.SimplePredicate;
@@ -79,7 +79,7 @@ public class MultiblockState {
 
     public IMultiController getController() {
         if (world.isLoaded(controllerPos)) {
-            if (world.getBlockEntity(controllerPos) instanceof IMetaMachineBlockEntity machineBlockEntity
+            if (world.getBlockEntity(controllerPos) instanceof IMachineBlockEntity machineBlockEntity
                     && machineBlockEntity.getMetaMachine() instanceof IMultiController controller) {
                 return lastController = controller;
             }
@@ -165,9 +165,9 @@ public class MultiblockState {
                 IMultiController controller = getController();
                 if (controller != null) {
                     if (controller.checkPattern()) {
-                        if (controller.isFormed() && state.getBlock() instanceof VariantActiveBlock<?>) {
-                            LongSet vaBlocks = getMatchContext().getOrDefault("vaBlocks", LongSets.emptySet());
-                            if (vaBlocks.contains(pos.asLong())) {
+                        if (controller.isFormed() && state.getBlock() instanceof ActiveBlock) {
+                            LongSet activeBlocks = getMatchContext().getOrDefault("vaBlocks", LongSets.emptySet());
+                            if (activeBlocks.contains(pos.asLong())) {
                                 // fine! it's caused by active blocks.
                                 // speed up here!
                                 return;

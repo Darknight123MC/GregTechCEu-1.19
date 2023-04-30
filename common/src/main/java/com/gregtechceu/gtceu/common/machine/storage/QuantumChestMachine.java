@@ -1,6 +1,7 @@
 package com.gregtechceu.gtceu.common.machine.storage;
 
-import com.gregtechceu.gtceu.api.machine.IMetaMachineBlockEntity;
+import com.gregtechceu.gtceu.api.item.tool.GTToolType;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.TieredMachine;
@@ -17,6 +18,7 @@ import com.lowdragmc.lowdraglib.gui.editor.Icons;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
 import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
 import com.lowdragmc.lowdraglib.gui.texture.ResourceBorderTexture;
+import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
 import com.lowdragmc.lowdraglib.gui.widget.*;
 import com.lowdragmc.lowdraglib.msic.ItemStackTransfer;
 import com.lowdragmc.lowdraglib.side.item.ItemTransferHelper;
@@ -80,7 +82,7 @@ public class QuantumChestMachine extends TieredMachine implements IAutoOutputIte
     @Persisted @Getter
     private final ItemStackTransfer lockedItem;
 
-    public QuantumChestMachine(IMetaMachineBlockEntity holder, int tier, int maxStoredItems, Object... args) {
+    public QuantumChestMachine(IMachineBlockEntity holder, int tier, int maxStoredItems, Object... args) {
         super(holder, tier);
         this.outputFacingItems = getFrontFacing().getOpposite();
         this.maxStoredItems = maxStoredItems;
@@ -406,5 +408,24 @@ public class QuantumChestMachine extends TieredMachine implements IAutoOutputIte
                         .setTooltipText("gtceu.gui.item_voiding_partial.tooltip"))
                 .widget(UITemplate.bindPlayerInventory(entityPlayer.getInventory(), GuiTextures.SLOT, 7, 84, true));
 
+    }
+
+    //////////////////////////////////////
+    //*******     Rendering     ********//
+    //////////////////////////////////////
+    @Override
+    public ResourceTexture sideTips(Player player, GTToolType toolType, Direction side) {
+        if (toolType == GTToolType.WRENCH) {
+            if (!player.isCrouching()) {
+                if (!hasFrontFacing() || side != getFrontFacing()) {
+                    return GuiTextures.TOOL_IO_FACING_ROTATION;
+                }
+            }
+        } else if (toolType == GTToolType.SCREWDRIVER) {
+            if (side == getOutputFacingItems()) {
+                return GuiTextures.TOOL_ALLOW_INPUT;
+            }
+        }
+        return super.sideTips(player, toolType, side);
     }
 }

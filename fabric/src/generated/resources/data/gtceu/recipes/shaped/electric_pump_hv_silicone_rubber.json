@@ -2,28 +2,28 @@
   "type": "minecraft:crafting_shaped",
   "key": {
     "C": {
-      "tag": "minecraft:cable_gt_single/gold"
+      "item": "gtceu:cable_single.gold"
     },
     "M": {
       "item": "gtceu:electric.motor.hv"
     },
     "P": {
-      "tag": "minecraft:pipe_normal_fluid/stainless_steel"
+      "item": "gtceu:fluid_pipe_normal.stainless_steel"
     },
     "R": {
-      "tag": "minecraft:rings/silicone_rubber"
+      "tag": "c:silicone_rubber_rings"
     },
     "S": {
-      "tag": "minecraft:screws/steel"
+      "tag": "c:steel_screws"
     },
     "X": {
-      "tag": "minecraft:rotors/steel"
+      "tag": "c:steel_rotors"
     },
     "d": {
-      "tag": "minecraft:tool/screwdriver"
+      "tag": "c:tool/screwdriver"
     },
     "w": {
-      "tag": "minecraft:tool/wrench"
+      "tag": "c:tool/wrench"
     }
   },
   "pattern": [

@@ -5,7 +5,7 @@ import com.gregtechceu.gtceu.api.machine.feature.IUIMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMufflerMachine;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.UITemplate;
-import com.gregtechceu.gtceu.api.machine.IMetaMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.multiblock.part.MultiblockPartMachine;
@@ -18,6 +18,8 @@ import com.lowdragmc.lowdraglib.side.item.ItemTransferHelper;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 import lombok.Getter;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -40,7 +42,7 @@ public class MufflerPartMachine extends TieredPartMachine implements IMufflerMac
     @Getter @Persisted
     private final ItemStackTransfer inventory;
 
-    public MufflerPartMachine(IMetaMachineBlockEntity holder, int tier) {
+    public MufflerPartMachine(IMachineBlockEntity holder, int tier) {
         super(holder, tier);
         this.recoveryChance = Math.max(1, tier * 10);
         this.inventory = new ItemStackTransfer((int) Math.pow(tier + 1, 2));
@@ -73,6 +75,7 @@ public class MufflerPartMachine extends TieredPartMachine implements IMufflerMac
     }
 
     @Override
+    @Environment(EnvType.CLIENT)
     public void clientTick() {
         super.clientTick();
         for (IMultiController controller : getControllers()) {

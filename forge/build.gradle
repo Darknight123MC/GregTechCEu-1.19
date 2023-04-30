@@ -73,6 +73,7 @@ configurations {
 
 repositories {
     // mavens for Forge-exclusives
+    maven { url = "https://api.modrinth.com/maven" } // Jade
     maven { url = "https://maven.theillusivec4.top/" } // Curios
     maven { // Create Forge and Registrate Forge
         url = "https://maven.tterrag.com/"
@@ -86,6 +87,13 @@ repositories {
     maven { // TOP
         url "https://maven.k-4u.nl"
     }
+    maven {
+        // saps.dev Maven (KubeJS and Rhino)
+        url = "https://maven.saps.dev/minecraft"
+        content {
+            includeGroup "dev.latvian.mods"
+        }
+    }
 }
 
 dependencies {
@@ -95,15 +103,14 @@ dependencies {
     shadowCommon(project(path: ":${mod_id}-common", configuration: "transformProductionForge")) { transitive = false }
 
     // LDLib
-    modCompileOnly(forge.ldlib.common) { transitive = false }
     modImplementation(forge.ldlib.forge) { transitive = false }
 
     // Registrate
-    modImplementation forge.registrate
+    modImplementation(include("com.tterrag.registrate:Registrate:${forge.versions.registrate.get()}"))
 
     // Create and its dependencies
-    modCompileOnly(forge.createForge) { transitive = false }
-    modCompileOnly forge.flywheel
+    modImplementation("com.simibubi.create:create-${libs.versions.minecraft.get()}:${forge.versions.createForge.get()}:slim") { transitive = false }
+    modImplementation forge.flywheel
 
     // JEI
     modCompileOnly forge.jei.common.api
@@ -113,10 +120,16 @@ dependencies {
     // REI
     modCompileOnly forge.rei.plugin
     modCompileOnly forge.rei.api
-    modImplementation forge.rei.fabric
+    modImplementation forge.rei.forge
 
     // TOP
-    modImplementation(forge.theoneprobe) { transitive = false }
+    modCompileOnly(forge.theoneprobe) { transitive = false }
+
+    // Jade
+    modImplementation forge.jade
+
+    // KJS
+    modImplementation forge.kubejs
 }
 
 processResources {
@@ -172,7 +185,7 @@ components.java {
 publishing {
     publications {
         mavenForge(MavenPublication) {
-            artifactId = rootProject.mod_id + "-" + project.name
+            artifactId = archivesBaseName
             from components.java
         }
     }

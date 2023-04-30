@@ -1,11 +1,10 @@
 package com.gregtechceu.gtceu.client.renderer.machine;
 
 import com.gregtechceu.gtceu.GTCEu;
-import com.gregtechceu.gtceu.common.block.variant.BoilerFireBoxCasingBlock;
+import com.gregtechceu.gtceu.common.block.BoilerFireboxType;
 import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiController;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
-import com.gregtechceu.gtceu.common.block.variant.CasingBlock;
 import com.lowdragmc.lowdraglib.client.bakedpipeline.FaceQuad;
 import com.lowdragmc.lowdraglib.client.model.ModelFactory;
 import net.fabricmc.api.EnvType;
@@ -24,14 +23,12 @@ import java.util.List;
  * @date 2023/3/16
  * @implNote LargeBoilerRenderer
  */
-public class LargeBoilerRenderer extends WorkableCasingMachineRenderer implements IControllerRenderer{
+public class LargeBoilerRenderer extends WorkableCasingMachineRenderer implements IControllerRenderer {
     public static final ResourceLocation BLOOM_OVERLAY = GTCEu.id("block/casings/firebox/machine_casing_firebox_bloom");
-    public final CasingBlock.CasingType casingType;
-    public final BoilerFireBoxCasingBlock.CasingType firebox;
+    public final BoilerFireboxType firebox;
 
-    public LargeBoilerRenderer(CasingBlock.CasingType casingType, BoilerFireBoxCasingBlock.CasingType firebox, ResourceLocation workableModel) {
-        super(casingType.getTexture(), workableModel, false);
-        this.casingType = casingType;
+    public LargeBoilerRenderer(ResourceLocation texture, BoilerFireboxType firebox, ResourceLocation workableModel) {
+        super(texture, workableModel, false);
         this.firebox = firebox;
     }
 
@@ -43,11 +40,11 @@ public class LargeBoilerRenderer extends WorkableCasingMachineRenderer implement
             // firebox
             if (side != null && modelFacing != null) {
                 if (side == Direction.UP) {
-                    quads.add(FaceQuad.bakeFace(modelFacing, ModelFactory.getBlockSprite(firebox.getTop()), modelState));
+                    quads.add(FaceQuad.bakeFace(modelFacing, ModelFactory.getBlockSprite(firebox.top()), modelState));
                 } else if (side == Direction.DOWN) {
-                    quads.add(FaceQuad.bakeFace(modelFacing, ModelFactory.getBlockSprite(firebox.getBottom()), modelState));
+                    quads.add(FaceQuad.bakeFace(modelFacing, ModelFactory.getBlockSprite(firebox.bottom()), modelState));
                 } else {
-                    quads.add(FaceQuad.bakeFace(modelFacing, ModelFactory.getBlockSprite(firebox.getSide()), modelState));
+                    quads.add(FaceQuad.bakeFace(modelFacing, ModelFactory.getBlockSprite(firebox.side()), modelState));
                     if (machine instanceof IRecipeLogicMachine recipeLogicMachine && recipeLogicMachine.getRecipeLogic().isWorking()) {
                         quads.add(FaceQuad.bakeFace(modelFacing, ModelFactory.getBlockSprite(BLOOM_OVERLAY), modelState, -1, 15, true, false));
                     }
@@ -55,8 +52,9 @@ public class LargeBoilerRenderer extends WorkableCasingMachineRenderer implement
             }
         } else {
             if (side != null && modelFacing != null) {
-                quads.add(FaceQuad.bakeFace(modelFacing, ModelFactory.getBlockSprite(casingType.getTexture()), modelState));
+                quads.add(FaceQuad.bakeFace(modelFacing, ModelFactory.getBlockSprite(baseCasing), modelState));
             }
         }
     }
+
 }

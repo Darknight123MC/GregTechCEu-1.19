@@ -2,16 +2,16 @@
   "type": "minecraft:crafting_shaped",
   "key": {
     "G": {
-      "tag": "minecraft:gems/quartzite"
+      "tag": "c:quartzite_gems"
     },
     "P": {
-      "tag": "minecraft:plates/steel"
+      "tag": "c:steel_plates"
     },
     "R": {
-      "tag": "minecraft:sticks/brass"
+      "tag": "c:brass_rods"
     },
     "X": {
-      "tag": "minecraft:circuit/lv"
+      "tag": "c:lv_circuits"
     }
   },
   "pattern": [

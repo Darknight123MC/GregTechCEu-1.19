@@ -5,13 +5,13 @@
       "item": "gtceu:quantumeye"
     },
     "P": {
-      "tag": "minecraft:plates/stainless_steel"
+      "tag": "c:stainless_steel_plates"
     },
     "W": {
-      "tag": "minecraft:wire_gt_quadruple/mercury_barium_calcium_cuprate"
+      "item": "gtceu:wire_quadruple.mercury_barium_calcium_cuprate"
     },
     "X": {
-      "tag": "minecraft:circuit/hv"
+      "tag": "c:hv_circuits"
     }
   },
   "pattern": [

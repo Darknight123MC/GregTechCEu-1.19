@@ -2,15 +2,16 @@ package com.gregtechceu.gtceu.api.machine.multiblock;
 
 import com.google.common.collect.Table;
 import com.google.common.collect.Tables;
+import com.gregtechceu.gtceu.api.block.ActiveBlock;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.IRecipeHandler;
 import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
+import com.gregtechceu.gtceu.api.machine.feature.IMufflableMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMufflerMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.machine.trait.IRecipeHandlerTrait;
 import com.gregtechceu.gtceu.api.machine.trait.MachineTrait;
-import com.gregtechceu.gtceu.api.block.VariantActiveBlock;
-import com.gregtechceu.gtceu.api.machine.IMetaMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.IRecipeLogicMachine;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
@@ -22,6 +23,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
 import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 
@@ -35,7 +37,7 @@ import java.util.*;
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public abstract class WorkableMultiblockMachine extends MultiblockControllerMachine implements IRecipeLogicMachine {
+public abstract class WorkableMultiblockMachine extends MultiblockControllerMachine implements IRecipeLogicMachine, IMufflableMachine {
 
     protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(WorkableMultiblockMachine.class, MultiblockControllerMachine.MANAGED_FIELD_HOLDER);
 
@@ -48,8 +50,10 @@ public abstract class WorkableMultiblockMachine extends MultiblockControllerMach
     @Getter
     protected final Table<IO, RecipeCapability<?>, List<IRecipeHandler<?>>> capabilitiesProxy;
     protected final List<ISubscription> traitSubscriptions;
+    @Persisted @DescSynced @Getter @Setter
+    protected boolean isMuffled;
 
-    public WorkableMultiblockMachine(IMetaMachineBlockEntity holder, Object... args) {
+    public WorkableMultiblockMachine(IMachineBlockEntity holder, Object... args) {
         super(holder);
         this.recipeType = getDefinition().getRecipeType();
         this.recipeLogic = createRecipeLogic(args);
@@ -85,6 +89,9 @@ public abstract class WorkableMultiblockMachine extends MultiblockControllerMach
     public void onStructureFormed() {
         super.onStructureFormed();
         // attach parts' traits
+        capabilitiesProxy.clear();
+        traitSubscriptions.forEach(ISubscription::unsubscribe);
+        traitSubscriptions.clear();
         Map<Long, IO> ioMap = getMultiblockState().getMatchContext().getOrCreate("ioMap", Long2ObjectMaps::emptyMap);
         for (IMultiPart part : parts) {
             IO io = ioMap.getOrDefault(part.self().getPos().asLong(), IO.BOTH);
@@ -117,7 +124,7 @@ public abstract class WorkableMultiblockMachine extends MultiblockControllerMach
     @Override
     public void onStructureInvalid() {
         super.onStructureInvalid();
-        updateVBBlocks(false);
+        updateActiveBlocks(false);
         capabilitiesProxy.clear();
         traitSubscriptions.forEach(ISubscription::unsubscribe);
         traitSubscriptions.clear();
@@ -128,7 +135,7 @@ public abstract class WorkableMultiblockMachine extends MultiblockControllerMach
     @Override
     public void onPartUnload() {
         super.onPartUnload();
-        updateVBBlocks(false);
+        updateActiveBlocks(false);
         capabilitiesProxy.clear();
         traitSubscriptions.forEach(ISubscription::unsubscribe);
         traitSubscriptions.clear();
@@ -142,12 +149,12 @@ public abstract class WorkableMultiblockMachine extends MultiblockControllerMach
     //******     RECIPE LOGIC    *******//
     //////////////////////////////////////
 
-    public void updateVBBlocks(boolean active) {
-        LongSet vaBlocks = getMultiblockState().getMatchContext().getOrDefault("vaBlocks", LongSets.emptySet());
-        for (Long pos : vaBlocks) {
+    public void updateActiveBlocks(boolean active) {
+        LongSet activeBlocks = getMultiblockState().getMatchContext().getOrDefault("vaBlocks", LongSets.emptySet());
+        for (Long pos : activeBlocks) {
             var blockPos = BlockPos.of(pos);
             var blockState = getLevel().getBlockState(blockPos);
-            if (blockState.getBlock() instanceof VariantActiveBlock<?> block) {
+            if (blockState.getBlock() instanceof ActiveBlock block) {
                 var newState = block.changeActive(blockState, active);
                 if (newState != blockState) {
                     getLevel().setBlockAndUpdate(blockPos, newState);
@@ -165,7 +172,7 @@ public abstract class WorkableMultiblockMachine extends MultiblockControllerMach
     public void notifyStatusChanged(RecipeLogic.Status oldStatus, RecipeLogic.Status newStatus) {
         IRecipeLogicMachine.super.notifyStatusChanged(oldStatus, newStatus);
         if (newStatus == RecipeLogic.Status.WORKING || oldStatus == RecipeLogic.Status.WORKING) {
-            updateVBBlocks(newStatus == RecipeLogic.Status.WORKING);
+            updateActiveBlocks(newStatus == RecipeLogic.Status.WORKING);
         }
     }
 
@@ -184,17 +191,6 @@ public abstract class WorkableMultiblockMachine extends MultiblockControllerMach
                     muffler.recoverItemsTable(getDefinition().getRecoveryItems().get());
                     break;
                 }
-            }
-        }
-    }
-
-    @Override
-    public void clientTick() {
-        super.clientTick();
-        if (recipeLogic.isWorking()) {
-            var sound = getRecipeType().getSound();
-            if (sound != null && getOffsetTimer() % 20 == 0) {
-                sound.playAt(getLevel(), getPos(), 1, 1, true);
             }
         }
     }

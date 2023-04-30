@@ -9,11 +9,13 @@ import com.gregtechceu.gtceu.api.machine.feature.IAutoOutputFluid;
 import com.gregtechceu.gtceu.api.machine.feature.IAutoOutputItem;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.client.model.ItemBakedModel;
+import com.gregtechceu.gtceu.client.renderer.block.CTMModelRenderer;
 import com.gregtechceu.gtceu.client.renderer.cover.ICoverableRenderer;
 import com.lowdragmc.lowdraglib.client.bakedpipeline.FaceQuad;
 import com.lowdragmc.lowdraglib.client.model.ModelFactory;
+import com.lowdragmc.lowdraglib.client.model.custommodel.ICTMPredicate;
 import com.lowdragmc.lowdraglib.client.renderer.IItemRendererProvider;
-import com.lowdragmc.lowdraglib.client.renderer.impl.IModelRenderer;
+import com.lowdragmc.lowdraglib.utils.FacadeBlockAndTintGetter;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -44,7 +46,7 @@ import java.util.function.Consumer;
  * @date 2023/2/26
  * @implNote MachineRenderer
  */
-public class MachineRenderer extends IModelRenderer implements ICoverableRenderer, IPartRenderer {
+public class MachineRenderer extends CTMModelRenderer implements ICoverableRenderer, IPartRenderer, ICTMPredicate {
 
     public static final ResourceLocation PIPE_OVERLAY = GTCEu.id("block/overlay/machine/overlay_pipe");
     public static final ResourceLocation FLUID_OUTPUT_OVERLAY = GTCEu.id("block/overlay/machine/overlay_fluid_output");
@@ -67,6 +69,7 @@ public class MachineRenderer extends IModelRenderer implements ICoverableRendere
     }
 
     @Override
+    @Environment(EnvType.CLIENT)
     public void renderItem(ItemStack stack, ItemTransforms.TransformType transformType, boolean leftHand, PoseStack matrixStack, MultiBufferSource buffer, int combinedLight, int combinedOverlay, BakedModel model) {
         if (stack.getItem() instanceof MetaMachineItem machineItem) {
             IItemRendererProvider.disabled.set(true);
@@ -88,7 +91,7 @@ public class MachineRenderer extends IModelRenderer implements ICoverableRendere
             var machine = machineBlock.getMachine(level, pos);
             if (machine != null) {
                 var definition = machine.getDefinition();
-                var modelState = ModelFactory.getRotation(frontFacing, true);
+                var modelState = ModelFactory.getRotation(frontFacing);
                 var modelFacing = side == null ? null : ModelFactory.modelFacing(side, frontFacing);
                 var quads = new LinkedList<BakedQuad>();
                 // render machine additional quads
@@ -136,7 +139,7 @@ public class MachineRenderer extends IModelRenderer implements ICoverableRendere
 
     @Environment(EnvType.CLIENT)
     public void renderBaseModel(List<BakedQuad> quads, MachineDefinition definition, @Nullable MetaMachine machine, Direction frontFacing, @Nullable Direction side, RandomSource rand) {
-        quads.addAll(getRotatedModel(frontFacing).getQuads(definition.get().defaultBlockState(), side, rand));
+        quads.addAll(getRotatedModel(frontFacing).getQuads(definition.defaultBlockState(), side, rand));
     }
 
     /**
@@ -167,5 +170,21 @@ public class MachineRenderer extends IModelRenderer implements ICoverableRendere
             register.accept(FLUID_OUTPUT_OVERLAY);
             register.accept(ITEM_OUTPUT_OVERLAY);
         }
+    }
+
+    //////////////////////////////////////
+    //**********     CTM     ***********//
+    //////////////////////////////////////
+    @Override
+    public boolean isConnected(BlockAndTintGetter level, BlockState state, BlockPos pos, BlockState sourceState, BlockPos sourcePos, Direction side) {
+        var stateAppearance = FacadeBlockAndTintGetter.getAppearance(state, level, pos, side, sourceState, sourcePos);
+        var sourceStateAppearance = FacadeBlockAndTintGetter.getAppearance(sourceState, level, sourcePos, side, state, pos);
+//        var machine = MetaMachine.getMachine(level, pos);
+//        if (machine != null) {
+//            if (machine instanceof IMultiController controller && !controller.isFormed()) {
+//                return false;
+//            }
+//        }
+        return stateAppearance == sourceStateAppearance;
     }
 }

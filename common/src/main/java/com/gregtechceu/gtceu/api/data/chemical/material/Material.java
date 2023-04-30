@@ -3,10 +3,6 @@ package com.gregtechceu.gtceu.api.data.chemical.material;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.gregtechceu.gtceu.GTCEu;
-import com.gregtechceu.gtceu.api.data.chemical.material.properties.*;
-import com.gregtechceu.gtceu.api.item.tool.MaterialToolTier;
-import com.gregtechceu.gtceu.api.registry.GTRegistries;
-import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.gregtechceu.gtceu.api.data.chemical.Element;
 import com.gregtechceu.gtceu.api.data.chemical.fluid.FluidType;
 import com.gregtechceu.gtceu.api.data.chemical.fluid.FluidTypes;
@@ -14,10 +10,16 @@ import com.gregtechceu.gtceu.api.data.chemical.material.info.MaterialFlag;
 import com.gregtechceu.gtceu.api.data.chemical.material.info.MaterialFlags;
 import com.gregtechceu.gtceu.api.data.chemical.material.info.MaterialIconSet;
 import com.gregtechceu.gtceu.api.data.chemical.material.info.MaterialIconType;
+import com.gregtechceu.gtceu.api.data.chemical.material.properties.*;
 import com.gregtechceu.gtceu.api.data.chemical.material.stack.MaterialStack;
+import com.gregtechceu.gtceu.api.item.tool.MaterialToolTier;
+import com.gregtechceu.gtceu.api.registry.GTRegistries;
+import com.gregtechceu.gtceu.utils.FormattingUtil;
 import com.lowdragmc.lowdraglib.side.fluid.FluidStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.material.Fluid;
 
@@ -59,7 +61,13 @@ public class Material implements Comparable<Material> {
     private String calculateChemicalFormula() {
         if (chemicalFormula != null) return this.chemicalFormula;
         if (materialInfo.element != null) {
-            return materialInfo.element.symbol();
+            String[] split = materialInfo.element.symbol().split("-");
+            String result;
+            if (split.length > 1) {
+                split[1] = FormattingUtil.toSmallUpNumbers(split[1]);
+                result = split[0] + split[1];
+            } else result = materialInfo.element.symbol();
+            return result;
         }
         if (!materialInfo.componentList.isEmpty()) {
             StringBuilder components = new StringBuilder();
@@ -75,7 +83,7 @@ public class Material implements Comparable<Material> {
     }
 
     public Material setFormula(String formula) {
-        return setFormula(formula, false);
+        return setFormula(formula, true);
     }
 
     public Material setFormula(String formula, boolean withFormatting) {
@@ -188,6 +196,11 @@ public class Material implements Comparable<Material> {
 
     public FluidStack getFluid(long amount) {
         return FluidStack.create(getFluid(), amount);
+    }
+
+    public Item getBucket() {
+        Fluid fluid = getFluid();
+        return fluid.getBucket();
     }
 
     public int getBlockHarvestLevel() {
@@ -476,6 +489,47 @@ public class Material implements Comparable<Material> {
         }
 
         /**
+         * Add a {@link WoodProperty} to this Material.<br>
+         * Useful for marking a Material as Wood for various additional behaviors.<br>
+         * Will be created with a Harvest Level of 0, and a Burn Time of 300 (Furnace Fuel).
+         *
+         * @throws IllegalArgumentException If a {@link DustProperty} has already been added to this Material.
+         */
+        public Builder wood() {
+            return wood(0, 300);
+        }
+
+        /**
+         * Add a {@link WoodProperty} to this Material.<br>
+         * Useful for marking a Material as Wood for various additional behaviors.<br>
+         * Will be created with a Burn Time of 300 (Furnace Fuel).
+         *
+         * @param harvestLevel The Harvest Level of this block for Mining.<br>
+         *                     If this Material also has a {@link ToolProperty}, this value will
+         *                     also be used to determine the tool's Mining Level.
+         * @throws IllegalArgumentException If a {@link DustProperty} has already been added to this Material.
+         */
+        public Builder wood(int harvestLevel) {
+            return wood(harvestLevel, 300);
+        }
+
+        /**
+         * Add a {@link WoodProperty} to this Material.<br>
+         * Useful for marking a Material as Wood for various additional behaviors.<br>
+         *
+         * @param harvestLevel The Harvest Level of this block for Mining.<br>
+         *                     If this Material also has a {@link ToolProperty}, this value will
+         *                     also be used to determine the tool's Mining Level.
+         * @param burnTime     The Burn Time (in ticks) of this Material as a Furnace Fuel.
+         * @throws IllegalArgumentException If a {@link DustProperty} has already been added to this Material.
+         */
+        public Builder wood(int harvestLevel, int burnTime) {
+            properties.setProperty(PropertyKey.DUST, new DustProperty(harvestLevel, burnTime));
+            properties.ensureSet(PropertyKey.WOOD);
+            return this;
+        }
+
+        /**
          * Add an {@link IngotProperty} to this Material.<br>
          * Will be created with a Harvest Level of 2 and no Burn Time (Furnace Fuel).<br>
          * Will automatically add a {@link DustProperty} to this Material if it does not already have one.
@@ -713,7 +767,8 @@ public class Material implements Comparable<Material> {
          * @param f1 A {@link Collection} of {@link MaterialFlag}. Provided this way for easy Flag presets to be applied.
          * @param f2 An Array of {@link MaterialFlag}. If no {@link Collection} is required, use {@link Builder#flags(MaterialFlag...)}.
          */
-        public Builder flags(Collection<MaterialFlag> f1, MaterialFlag... f2) {
+        // rename for kjs conflicts
+        public Builder appendFlags(Collection<MaterialFlag> f1, MaterialFlag... f2) {
             this.flags.addFlags(f1.toArray(new MaterialFlag[0]));
             this.flags.addFlags(f2);
             return this;
@@ -889,13 +944,11 @@ public class Material implements Comparable<Material> {
         }
 
         public Builder fluidPipeProperties(int maxTemp, int throughput, boolean gasProof, boolean acidProof, boolean cryoProof, boolean plasmaProof) {
-            properties.ensureSet(PropertyKey.INGOT);
             properties.setProperty(PropertyKey.FLUID_PIPE, new FluidPipeProperties(maxTemp, throughput, gasProof, acidProof, cryoProof, plasmaProof));
             return this;
         }
 
         public Builder itemPipeProperties(int priority, float stacksPerSec) {
-            properties.ensureSet(PropertyKey.INGOT);
             properties.setProperty(PropertyKey.ITEM_PIPE, new ItemPipeProperties(priority, stacksPerSec));
             return this;
         }

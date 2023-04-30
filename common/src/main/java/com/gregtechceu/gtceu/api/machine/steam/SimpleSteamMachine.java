@@ -12,7 +12,7 @@ import com.gregtechceu.gtceu.api.data.damagesource.DamageSources;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.UITemplate;
 import com.gregtechceu.gtceu.api.gui.widget.PredicatedImageWidget;
-import com.gregtechceu.gtceu.api.machine.IMetaMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
@@ -54,8 +54,9 @@ public class SimpleSteamMachine extends SteamWorkableMachine implements IMachine
     public final NotifiableItemStackHandler importItems;
     @Persisted
     public final NotifiableItemStackHandler exportItems;
+    private boolean needsVenting;
 
-    public SimpleSteamMachine(IMetaMachineBlockEntity holder, boolean isHighPressure, Object... args) {
+    public SimpleSteamMachine(IMachineBlockEntity holder, boolean isHighPressure, Object... args) {
         super(holder, isHighPressure, args);
         this.importItems = createImportItemHandler(args);
         this.exportItems = createExportItemHandler(args);
@@ -83,8 +84,14 @@ public class SimpleSteamMachine extends SteamWorkableMachine implements IMachine
     }
 
     @Override
+    public boolean isVentingStuck() {
+        return needsVenting || super.isVentingStuck();
+    }
+
+    @Override
     public void onLoad() {
         super.onLoad();
+        subscribeServerTick(this::checkVenting);
         // Fine, we use it to provide eu cap for recipe, simulating an EU machine.
         capabilitiesProxy.put(IO.IN, EURecipeCapability.CAP, List.of(new SteamEnergyRecipeHandler(steamTank, FluidHelper.getBucket() / 1000d)));
     }
@@ -119,10 +126,8 @@ public class SimpleSteamMachine extends SteamWorkableMachine implements IMachine
         return copied;
     }
 
-    @Override
-    public void onWorking() {
-        super.onWorking();
-        if (recipeLogic.getProgress() % 10 == 0) {
+    public void checkVenting() {
+        if (!getLevel().isClientSide() && needsVenting && getOffsetTimer() % 10 == 0) {
             tryDoVenting();
         }
     }
@@ -130,7 +135,9 @@ public class SimpleSteamMachine extends SteamWorkableMachine implements IMachine
     @Override
     public void afterWorking() {
         super.afterWorking();
-        tryDoVenting();
+        if (!getLevel().isClientSide()) {
+            needsVenting = true;
+        }
     }
 
     public void tryDoVenting() {
@@ -157,6 +164,7 @@ public class SimpleSteamMachine extends SteamWorkableMachine implements IMachine
             if (ConfigHolder.machines.machineSounds){
                 serverLevel.playSound(null, posX, posY, posZ, SoundEvents.LAVA_EXTINGUISH, SoundSource.BLOCKS, 1.0f, 1.0f);
             }
+            needsVenting = false;
         }
 
     }
@@ -166,9 +174,11 @@ public class SimpleSteamMachine extends SteamWorkableMachine implements IMachine
     //////////////////////////////////////
     @Override
     public ModularUI createUI(Player entityPlayer) {
+        var group = recipeType.createUITemplate(recipeLogic::getProgressPercent, importItems.storage, exportItems.storage, new IFluidStorage[0], new IFluidStorage[0], true, isHighPressure);
+        group.addSelfPosition(0, 20);
         return new ModularUI(176, 166, this, entityPlayer)
                 .background(GuiTextures.BACKGROUND_STEAM.get(isHighPressure))
-                .widget(recipeType.createUITemplate(recipeLogic::getProgressPercent, importItems.storage, exportItems.storage, new IFluidStorage[0], new IFluidStorage[0], true, isHighPressure))
+                .widget(group)
                 .widget(new LabelWidget(5, 5, getBlockState().getBlock().getDescriptionId()))
                 .widget(new PredicatedImageWidget(79, 42, 18, 18, GuiTextures.INDICATOR_NO_STEAM.get(isHighPressure))
                         .setPredicate(recipeLogic::isHasNotEnoughEnergy))

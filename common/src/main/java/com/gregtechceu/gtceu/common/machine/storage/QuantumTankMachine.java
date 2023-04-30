@@ -5,7 +5,8 @@ import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.UITemplate;
 import com.gregtechceu.gtceu.api.gui.widget.ToggleButtonWidget;
-import com.gregtechceu.gtceu.api.machine.IMetaMachineBlockEntity;
+import com.gregtechceu.gtceu.api.item.tool.GTToolType;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.TieredMachine;
@@ -14,6 +15,7 @@ import com.gregtechceu.gtceu.api.machine.feature.IDropSaveMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IUIMachine;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
 import com.lowdragmc.lowdraglib.gui.widget.ImageWidget;
 import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import com.lowdragmc.lowdraglib.gui.widget.PhantomFluidWidget;
@@ -79,7 +81,7 @@ public class QuantumTankMachine extends TieredMachine implements IAutoOutputFlui
     @Persisted @Getter
     private final FluidStorage lockedFluid;
 
-    public QuantumTankMachine(IMetaMachineBlockEntity holder, int tier, long maxStoredFluids, Object... args) {
+    public QuantumTankMachine(IMachineBlockEntity holder, int tier, long maxStoredFluids, Object... args) {
         super(holder, tier);
         this.outputFacingFluids = getFrontFacing().getOpposite();
         this.maxStoredFluids = maxStoredFluids;
@@ -310,7 +312,7 @@ public class QuantumTankMachine extends TieredMachine implements IAutoOutputFlui
                 .widget(new LabelWidget(6, 6, getBlockState().getBlock().getDescriptionId()))
                 .widget(new TankWidget(cache.storages[0], 90, 35, true, true)
                         .setBackground(GuiTextures.FLUID_SLOT))
-                .widget(new PhantomFluidWidget(lockedFluid, 69, 53, 18, 18)
+                .widget(new PhantomFluidWidget(lockedFluid, 70, 53, 18, 18)
                         .setShowAmount(false)
                         .setBackground(GuiTextures.FLUID_SLOT))
                 .widget(new ToggleButtonWidget(7, 53, 18, 18,
@@ -326,6 +328,24 @@ public class QuantumTankMachine extends TieredMachine implements IAutoOutputFlui
                         .setShouldUseBaseBackground()
                         .setTooltipText("gtceu.gui.fluid_voiding_partial.tooltip"))
                 .widget(UITemplate.bindPlayerInventory(entityPlayer.getInventory(), GuiTextures.SLOT, 7, 84, true));
+    }
 
+    //////////////////////////////////////
+    //*******     Rendering     ********//
+    //////////////////////////////////////
+    @Override
+    public ResourceTexture sideTips(Player player, GTToolType toolType, Direction side) {
+        if (toolType == GTToolType.WRENCH) {
+            if (!player.isCrouching()) {
+                if (!hasFrontFacing() || side != getFrontFacing()) {
+                    return GuiTextures.TOOL_IO_FACING_ROTATION;
+                }
+            }
+        } else if (toolType == GTToolType.SCREWDRIVER) {
+            if (side == getOutputFacingFluids()) {
+                return GuiTextures.TOOL_ALLOW_INPUT;
+            }
+        }
+        return super.sideTips(player, toolType, side);
     }
 }

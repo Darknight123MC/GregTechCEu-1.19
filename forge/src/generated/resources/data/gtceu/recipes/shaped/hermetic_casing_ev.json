@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "F": {
+      "item": "gtceu:fluid_pipe_large.stainless_steel"
+    },
+    "P": {
+      "tag": "forge:plates/titanium"
+    }
+  },
+  "pattern": [
+    "PPP",
+    "PFP",
+    "PPP"
+  ],
+  "result": {
+    "item": "gtceu:hermetic_casing_ev"
+  }
+}

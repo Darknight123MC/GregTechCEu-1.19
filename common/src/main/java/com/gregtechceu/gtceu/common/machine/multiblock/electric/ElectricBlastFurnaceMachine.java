@@ -2,11 +2,11 @@ package com.gregtechceu.gtceu.common.machine.multiblock.electric;
 
 import com.gregtechceu.gtceu.api.recipe.OverclockingLogic;
 import com.gregtechceu.gtceu.api.GTValues;
-import com.gregtechceu.gtceu.api.machine.IMetaMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
-import com.gregtechceu.gtceu.common.block.variant.CoilBlock;
+import com.gregtechceu.gtceu.common.block.CoilBlock;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 import it.unimi.dsi.fastutil.longs.LongIntPair;
 import lombok.Getter;
@@ -32,7 +32,7 @@ public class ElectricBlastFurnaceMachine extends WorkableElectricMultiblockMachi
     @Getter
     private int blastFurnaceTemperature;
 
-    public ElectricBlastFurnaceMachine(IMetaMachineBlockEntity holder) {
+    public ElectricBlastFurnaceMachine(IMachineBlockEntity holder) {
         super(holder);
     }
 

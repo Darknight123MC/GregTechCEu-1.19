@@ -1,13 +1,18 @@
 package com.gregtechceu.gtceu.api.machine;
 
 import com.gregtechceu.gtceu.api.block.BlockProperties;
+import com.gregtechceu.gtceu.api.block.IAppearance;
 import com.gregtechceu.gtceu.api.blockentity.ITickSubscription;
 import com.gregtechceu.gtceu.api.capability.GTCapabilityHelper;
 import com.gregtechceu.gtceu.api.capability.ICoverable;
 import com.gregtechceu.gtceu.api.cover.CoverBehavior;
+import com.gregtechceu.gtceu.api.gui.GuiTextures;
+import com.gregtechceu.gtceu.api.item.tool.IToolGridHighLight;
 import com.gregtechceu.gtceu.api.machine.feature.IAutoOutputFluid;
 import com.gregtechceu.gtceu.api.machine.feature.IAutoOutputItem;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineFeature;
+import com.gregtechceu.gtceu.api.machine.feature.IMufflableMachine;
+import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.machine.trait.MachineTrait;
 import com.gregtechceu.gtceu.common.cover.FluidFilterCover;
 import com.gregtechceu.gtceu.api.block.MetaMachineBlock;
@@ -20,6 +25,7 @@ import com.gregtechceu.gtceu.api.misc.IOFluidTransferList;
 import com.gregtechceu.gtceu.api.misc.IOItemTransferList;
 import com.gregtechceu.gtceu.common.cover.ItemFilterCover;
 import com.lowdragmc.lowdraglib.LDLib;
+import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
 import com.lowdragmc.lowdraglib.msic.FluidTransferList;
 import com.lowdragmc.lowdraglib.msic.ItemTransferList;
 import com.lowdragmc.lowdraglib.side.fluid.FluidStack;
@@ -31,6 +37,8 @@ import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.FieldManagedStorage;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 import lombok.Getter;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -43,6 +51,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -52,6 +61,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -68,12 +78,12 @@ import java.util.function.Predicate;
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class MetaMachine implements IManaged, IToolable, ITickSubscription {
+public class MetaMachine implements IManaged, IToolable, ITickSubscription, IAppearance, IToolGridHighLight {
     protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(MetaMachine.class);
     @Getter
     private final FieldManagedStorage syncStorage = new FieldManagedStorage(this);
     @Getter
-    public final IMetaMachineBlockEntity holder;
+    public final IMachineBlockEntity holder;
     @Getter
     @DescSynced
     @Persisted(key = "cover")
@@ -83,7 +93,7 @@ public class MetaMachine implements IManaged, IToolable, ITickSubscription {
     private final List<TickableSubscription> serverTicks;
     private final List<TickableSubscription> waitingToAdd;
 
-    public MetaMachine(IMetaMachineBlockEntity holder) {
+    public MetaMachine(IMachineBlockEntity holder) {
         this.holder = holder;
         this.coverContainer = new MachineCoverContainer(this);
         this.traits = new ArrayList<>();
@@ -98,7 +108,7 @@ public class MetaMachine implements IManaged, IToolable, ITickSubscription {
     //////////////////////////////////////
     //*****     Initialization    ******//
     //////////////////////////////////////
-    protected void scheduleRender(String fieldName, Object oldName, Object newName) {
+    protected void scheduleRender(String fieldName, Object newValue, Object oldValue) {
         scheduleRenderUpdate();
     }
 
@@ -218,6 +228,7 @@ public class MetaMachine implements IManaged, IToolable, ITickSubscription {
         }
     }
 
+    @Environment(EnvType.CLIENT)
     public void clientTick() {
 
     }
@@ -269,6 +280,12 @@ public class MetaMachine implements IManaged, IToolable, ITickSubscription {
     }
 
     protected InteractionResult onHardHammerClick(Player playerIn, InteractionHand hand, Direction gridSide, BlockHitResult hitResult) {
+        if (this instanceof IMufflableMachine mufflableMachine) {
+            if (!isRemote()) {
+                mufflableMachine.setMuffled(mufflableMachine.isMuffled());
+            }
+            return InteractionResult.CONSUME;
+        }
         return InteractionResult.PASS;
     }
 
@@ -277,7 +294,7 @@ public class MetaMachine implements IManaged, IToolable, ITickSubscription {
     }
 
     protected InteractionResult onWrenchClick(Player playerIn, InteractionHand hand, Direction gridSide, BlockHitResult hitResult) {
-        if (!needsSneakToRotate() || playerIn.isCrouching()) {
+        if (playerIn.isCrouching()) {
             if (gridSide == getFrontFacing() || !isFacingValid(gridSide) || !hasFrontFacing()) {
                 return InteractionResult.FAIL;
             }
@@ -306,13 +323,6 @@ public class MetaMachine implements IManaged, IToolable, ITickSubscription {
         return InteractionResult.PASS;
     }
 
-    /**
-     * @return true if the player must sneak to rotate this machine, otherwise false
-     */
-    public boolean needsSneakToRotate() {
-        return false;
-    }
-
 
     //////////////////////////////////////
     //**********     MISC    ***********//
@@ -320,7 +330,7 @@ public class MetaMachine implements IManaged, IToolable, ITickSubscription {
 
     @Nullable
     public static MetaMachine getMachine(BlockGetter level, BlockPos pos) {
-        if (level.getBlockEntity(pos) instanceof IMetaMachineBlockEntity machineBlockEntity) {
+        if (level.getBlockEntity(pos) instanceof IMachineBlockEntity machineBlockEntity) {
             return machineBlockEntity.getMetaMachine();
         }
         return null;
@@ -343,25 +353,38 @@ public class MetaMachine implements IManaged, IToolable, ITickSubscription {
         }
     }
 
-    public boolean isSideUsed(Player player, GTToolType toolType, Direction face) {
-        if (toolType == GTToolType.WRENCH) {
-            if (player.isCrouching()) {
-                return !hasFrontFacing() || (face == this.getFrontFacing() && this.canRenderFrontFaceX()) || !isFacingValid(face);
-            }
-        }
-        if (toolType == GTToolType.SOFT_MALLET) {
-            if (this instanceof IControllable) {
-                return false;
-            }
-        }
-        if (toolType == GTToolType.SCREWDRIVER || toolType == GTToolType.SOFT_MALLET || toolType == GTToolType.CROWBAR) {
-            return !coverContainer.hasCover(face);
+    @Override
+    public boolean shouldRenderGrid(Player player, ItemStack held, GTToolType toolType) {
+        if (toolType == GTToolType.WRENCH || toolType == GTToolType.SCREWDRIVER) return true;
+        if (toolType == GTToolType.HARD_HAMMER && this instanceof IMufflableMachine) return true;
+        for (CoverBehavior cover : coverContainer.getCovers()) {
+            if (cover.shouldRenderGrid(player, held, toolType)) return true;
         }
         return false;
     }
 
-    public boolean canRenderFrontFaceX() {
-        return true;
+    @Override
+    public ResourceTexture sideTips(Player player, GTToolType toolType, Direction side) {
+        if (toolType == GTToolType.WRENCH) {
+            if (player.isCrouching()) {
+                if (hasFrontFacing() && side != this.getFrontFacing() && isFacingValid(side)) {
+                    return GuiTextures.TOOL_FRONT_FACING_ROTATION;
+                }
+            }
+        } else if (toolType == GTToolType.SOFT_MALLET) {
+            if (this instanceof IControllable controllable) {
+                return controllable.isWorkingEnabled() ? GuiTextures.TOOL_PAUSE : GuiTextures.TOOL_START;
+            }
+        } else if (toolType == GTToolType.HARD_HAMMER) {
+            if (this instanceof IMufflableMachine mufflableMachine) {
+                return mufflableMachine.isMuffled() ? GuiTextures.TOOL_SOUND : GuiTextures.TOOL_MUTE;
+            }
+        }
+        var cover = coverContainer.getCoverAtSide(side);
+        if (cover != null) {
+            return cover.sideTips(player, toolType, side);
+        }
+        return null;
     }
 
 
@@ -429,6 +452,18 @@ public class MetaMachine implements IManaged, IToolable, ITickSubscription {
     }
 
     public void animateTick(RandomSource random) {
+    }
+
+    @Override
+    @Nonnull
+    public BlockState getBlockAppearance(BlockState state, BlockAndTintGetter level, BlockPos pos, Direction side, BlockState sourceState, BlockPos sourcePos) {
+        var appearance = getCoverContainer().getBlockAppearance(state, level, pos, side, sourceState, sourcePos);
+        if (appearance != null) return appearance;
+        if (this instanceof IMultiPart part && part.isFormed()) {
+            appearance = part.getFormedAppearance(sourceState, sourcePos, side);
+            if (appearance != null) return appearance;
+        }
+        return getDefinition().getAppearance().get();
     }
 
     //////////////////////////////////////

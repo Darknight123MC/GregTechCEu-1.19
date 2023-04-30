@@ -2,16 +2,16 @@
   "type": "minecraft:crafting_shaped",
   "key": {
     "C": {
-      "tag": "minecraft:cable_gt_single/gold"
+      "item": "gtceu:cable_single.gold"
     },
     "G": {
-      "tag": "minecraft:gems/ender_eye"
+      "tag": "c:ender_eye_gems"
     },
     "R": {
-      "tag": "minecraft:sticks/chrome"
+      "tag": "c:chromium_rods"
     },
     "X": {
-      "tag": "minecraft:circuit/hv"
+      "tag": "c:hv_circuits"
     }
   },
   "pattern": [

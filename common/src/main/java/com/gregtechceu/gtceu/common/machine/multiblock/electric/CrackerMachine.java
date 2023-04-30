@@ -1,11 +1,11 @@
 package com.gregtechceu.gtceu.common.machine.multiblock.electric;
 
-import com.gregtechceu.gtceu.api.machine.IMetaMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.OverclockingLogic;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
-import com.gregtechceu.gtceu.common.block.variant.CoilBlock;
+import com.gregtechceu.gtceu.common.block.CoilBlock;
 import it.unimi.dsi.fastutil.longs.LongIntPair;
 import lombok.Getter;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -28,7 +28,7 @@ public class CrackerMachine extends WorkableElectricMultiblockMachine {
     @Getter
     private int coilTier;
 
-    public CrackerMachine(IMetaMachineBlockEntity holder) {
+    public CrackerMachine(IMachineBlockEntity holder) {
         super(holder);
     }
 

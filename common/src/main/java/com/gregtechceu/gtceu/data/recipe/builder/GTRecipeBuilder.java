@@ -3,23 +3,21 @@ package com.gregtechceu.gtceu.data.recipe.builder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.gregtechceu.gtceu.GTCEu;
-import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
-import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
+import com.gregtechceu.gtceu.api.capability.recipe.*;
 import com.gregtechceu.gtceu.api.data.chemical.ChemicalHelper;
 import com.gregtechceu.gtceu.api.data.chemical.material.stack.UnificationEntry;
+import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.multiblock.CleanroomType;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeSerializer;
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.common.recipe.*;
-import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
-import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.data.chemical.material.Material;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.api.recipe.RecipeCondition;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
 import com.gregtechceu.gtceu.api.recipe.ingredient.SizedIngredient;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
-import com.gregtechceu.gtceu.api.tag.TagPrefix;
+import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
 import com.lowdragmc.lowdraglib.LDLib;
 import com.lowdragmc.lowdraglib.side.fluid.FluidStack;
 import com.lowdragmc.lowdraglib.utils.NBTToJsonConverter;
@@ -161,6 +159,19 @@ public class GTRecipeBuilder {
         return output(EURecipeCapability.CAP, eu);
     }
 
+    // for kjs
+    public GTRecipeBuilder itemInputs(Ingredient... inputs) {
+        return input(ItemRecipeCapability.CAP, inputs);
+    }
+
+    public GTRecipeBuilder itemInput(UnificationEntry input) {
+        return inputItems(input);
+    }
+
+    public GTRecipeBuilder itemInput(UnificationEntry input, int count) {
+        return inputItems(input, count);
+    }
+
     public GTRecipeBuilder inputItems(Ingredient... inputs) {
         return input(ItemRecipeCapability.CAP, inputs);
     }
@@ -211,8 +222,33 @@ public class GTRecipeBuilder {
         return inputItems(input.tagPrefix, input.material, count);
     }
 
-    public GTRecipeBuilder inputItems(TagPrefix orePrefix, @Nullable  Material material, int count) {
-        return inputItems(ChemicalHelper.getTag(orePrefix, material), count);
+    public GTRecipeBuilder inputItems(TagPrefix orePrefix, Material material, int count) {
+        TagKey<Item> tag = ChemicalHelper.getTag(orePrefix, material);
+        if (tag == null) {
+            return inputItems(ChemicalHelper.get(orePrefix, material, count));
+        }
+        return inputItems(tag, count);
+    }
+
+    public GTRecipeBuilder inputItems(MachineDefinition machine) {
+        return inputItems(machine, 1);
+    }
+
+    public GTRecipeBuilder inputItems(MachineDefinition machine, int count) {
+        return inputItems(machine.asStack(count));
+    }
+
+    // for kjs
+    public GTRecipeBuilder itemOutputs(ItemStack... outputs) {
+        return outputItems(outputs);
+    }
+
+    public GTRecipeBuilder itemOutput(UnificationEntry unificationEntry) {
+        return outputItems(unificationEntry.tagPrefix, unificationEntry.material);
+    }
+
+    public GTRecipeBuilder itemOutput(UnificationEntry unificationEntry, int count) {
+        return outputItems(unificationEntry.tagPrefix, unificationEntry.material, count);
     }
 
     public GTRecipeBuilder outputItems(ItemStack... outputs) {
@@ -247,6 +283,14 @@ public class GTRecipeBuilder {
 
     public GTRecipeBuilder outputItems(TagPrefix orePrefix, Material material, int count) {
         return outputItems(ChemicalHelper.get(orePrefix, material, count));
+    }
+
+    public GTRecipeBuilder outputItems(MachineDefinition machine) {
+        return outputItems(machine, 1);
+    }
+
+    public GTRecipeBuilder outputItems(MachineDefinition machine, int count) {
+        return outputItems(machine.asStack(count));
     }
 
     public GTRecipeBuilder notConsumable(ItemStack itemStack) {
@@ -308,6 +352,14 @@ public class GTRecipeBuilder {
 
     public GTRecipeBuilder outputFluids(FluidStack... outputs) {
         return output(FluidRecipeCapability.CAP, outputs);
+    }
+
+    public GTRecipeBuilder inputStress(float stress) {
+        return input(StressRecipeCapability.CAP, stress);
+    }
+
+    public GTRecipeBuilder outputStress(float stress) {
+        return output(StressRecipeCapability.CAP, stress);
     }
 
     //////////////////////////////////////
@@ -400,6 +452,14 @@ public class GTRecipeBuilder {
 
     public GTRecipeBuilder posY(int min, int max) {
         return posY(min, max, false);
+    }
+
+    public GTRecipeBuilder rpm(float rpm, boolean reverse) {
+        return addCondition(new RPMCondition(rpm).setReverse(reverse));
+    }
+
+    public GTRecipeBuilder rpm(float rpm) {
+        return rpm(rpm, false);
     }
 
     public void toJson(JsonObject json) {

@@ -2,16 +2,16 @@
   "type": "minecraft:crafting_shaped",
   "key": {
     "C": {
-      "tag": "minecraft:cable_gt_double/aluminium"
+      "item": "gtceu:cable_double.aluminium"
     },
     "M": {
-      "tag": "minecraft:sticks/neodymium_magnetic"
+      "tag": "c:magnetic_neodymium_rods"
     },
     "R": {
-      "tag": "minecraft:sticks/titanium"
+      "tag": "c:titanium_rods"
     },
     "W": {
-      "tag": "minecraft:wire_gt_double/kanthal"
+      "item": "gtceu:wire_double.kanthal"
     }
   },
   "pattern": [

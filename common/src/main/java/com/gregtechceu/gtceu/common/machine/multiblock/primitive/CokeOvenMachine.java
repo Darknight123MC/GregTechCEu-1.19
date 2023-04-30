@@ -3,7 +3,7 @@ package com.gregtechceu.gtceu.common.machine.multiblock.primitive;
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.UITemplate;
-import com.gregtechceu.gtceu.api.machine.IMetaMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.IUIMachine;
 import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
@@ -30,7 +30,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class CokeOvenMachine extends PrimitiveWorkableMachine implements IUIMachine {
 
-    public CokeOvenMachine(IMetaMachineBlockEntity holder, Object... args) {
+    public CokeOvenMachine(IMachineBlockEntity holder, Object... args) {
         super(holder, args);
     }
 
@@ -47,7 +47,8 @@ public class CokeOvenMachine extends PrimitiveWorkableMachine implements IUIMach
                 .widget(new TankWidget(exportFluids.storages[0], 134, 13, 20, 58, true, false)
                         .setBackground(GuiTextures.PRIMITIVE_LARGE_FLUID_TANK)
                         .setOverlay(GuiTextures.PRIMITIVE_LARGE_FLUID_TANK_OVERLAY)
-                        .setFillDirection(ProgressTexture.FillDirection.DOWN_TO_UP))
+                        .setFillDirection(ProgressTexture.FillDirection.DOWN_TO_UP)
+                        .setShowAmount(false))
                 .widget(UITemplate.bindPlayerInventory(entityPlayer.getInventory(), GuiTextures.PRIMITIVE_SLOT, 7, 84, true));
     }
 

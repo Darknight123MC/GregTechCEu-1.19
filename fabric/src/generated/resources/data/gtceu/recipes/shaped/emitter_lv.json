@@ -2,16 +2,16 @@
   "type": "minecraft:crafting_shaped",
   "key": {
     "C": {
-      "tag": "minecraft:cable_gt_single/tin"
+      "item": "gtceu:cable_single.tin"
     },
     "G": {
-      "tag": "minecraft:gems/quartzite"
+      "tag": "c:quartzite_gems"
     },
     "R": {
-      "tag": "minecraft:sticks/brass"
+      "tag": "c:brass_rods"
     },
     "X": {
-      "tag": "minecraft:circuit/lv"
+      "tag": "c:lv_circuits"
     }
   },
   "pattern": [

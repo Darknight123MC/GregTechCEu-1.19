@@ -2,19 +2,19 @@
   "type": "minecraft:crafting_shaped",
   "key": {
     "C": {
-      "tag": "minecraft:cable_gt_single/tungsten"
+      "item": "gtceu:cable_single.tungsten"
     },
     "G": {
-      "tag": "minecraft:gears/small/tungsten_steel"
+      "tag": "c:tungsten_steel_small_gears"
     },
     "M": {
       "item": "gtceu:electric.motor.iv"
     },
     "P": {
-      "tag": "minecraft:plates/tungsten_steel"
+      "tag": "c:tungsten_steel_plates"
     },
     "R": {
-      "tag": "minecraft:sticks/tungsten_steel"
+      "tag": "c:tungsten_steel_rods"
     }
   },
   "pattern": [

@@ -2,16 +2,16 @@
   "type": "minecraft:crafting_shaped",
   "key": {
     "G": {
-      "tag": "minecraft:gems/ender_eye"
+      "tag": "c:ender_eye_gems"
     },
     "P": {
-      "tag": "minecraft:plates/aluminium"
+      "tag": "c:aluminium_plates"
     },
     "W": {
-      "tag": "minecraft:wire_gt_quadruple/magnesium_diboride"
+      "item": "gtceu:wire_quadruple.magnesium_diboride"
     },
     "X": {
-      "tag": "minecraft:circuit/mv"
+      "tag": "c:mv_circuits"
     }
   },
   "pattern": [
